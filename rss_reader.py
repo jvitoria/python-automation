@@ -1,39 +1,44 @@
 import feedparser
 
-# This is a reliable public RSS feed from NASA
-RSS_URL = "https://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss"
+# 1. The sources you want to scan
+SOURCES = [
+    "https://news.ycombinator.com/rss",
+    "https://feeds.feedburner.com/TechCrunch/",
+    "https://www.nasa.gov/rss/dyn/lg_image_of_the_day.rss"
+]
 
-def automate_content():
-    feed = feedparser.parse(RSS_URL)
+# 2. Your target keywords (Automation is better when it's specific!)
+KEYWORDS = ["AI", "Python", "Space", "Apple", "Robot"]
+
+def run_smart_aggregator():
+    filename = "filtered_content.md"
+    found_count = 0
     
-    # Check if we got data
-    if not feed.entries:
-        print("No entries found.")
-        return
+    print("🚀 Starting Content Scan...")
 
-    # Create a filename
-    filename = "latest_content.md"
-
-    # Open the file in 'w' (write) mode
     with open(filename, "w", encoding="utf-8") as f:
-        # Write a Header
-        f.write(f"# Content Report: {feed.feed.title}\n")
-        f.write(f"Generated on: {feed.headers.get('date', 'Today')}\n\n")
-        f.write("---\n\n")
+        f.write("# 🎯 Automated Content Digest\n")
+        f.write(f"**Keywords:** {', '.join(KEYWORDS)}\n\n---\n")
 
-        # Loop through entries and write them to the file
-        for entry in feed.entries[:5]:
-            f.write(f"## {entry.title}\n")
-            f.write(f"**Source:** {entry.link}  \n")
-            f.write(f"**Published:** {entry.published}  \n\n")
-            # Some feeds include a summary or description
-            if 'summary' in entry:
-                f.write(f"{entry.summary}\n\n")
-            f.write("---\n\n")
+        for url in SOURCES:
+            feed = feedparser.parse(url)
+            source_name = getattr(feed.feed, 'title', url)
+            print(f"Scanning {source_name}...")
 
-    print(f"✅ Success! Content saved to {filename}")
+            for entry in feed.entries:
+                # We convert the title to lowercase so 'AI' matches 'ai' or 'Ai'
+                title = entry.title.lower()
+                
+                # The 'Magic' Line: Checks if ANY of your keywords are in the title
+                if any(word.lower() in title for word in KEYWORDS):
+                    f.write(f"### {entry.title}\n")
+                    f.write(f"* **Source:** {source_name}\n")
+                    f.write(f"* [Read Full Article]({entry.link})\n\n")
+                    found_count += 1
+                    print(f"   ✅ Found: {entry.title[:50]}...")
 
-# So para ter a certeza
+    print(f"\n✨ Done! Found {found_count} matching articles.")
+    print(f"📁 Open '{filename}' in VS Code to see your results.")
 
 if __name__ == "__main__":
-    automate_content()
+    run_smart_aggregator()
